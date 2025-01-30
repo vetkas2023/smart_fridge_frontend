@@ -3,8 +3,12 @@
 // Удобно, особенно когда не помнишь везде ли поменял значение переменной 👍
 // 
 
-// URL сервера
-export const URL = 'http://192.168.0.16:8000'
+import Config from "react-native-config"
+
+const host = Config.API_HOST || 'http://localhost'
+const port = Config.API_PORT || 8000
+
+export const URL = `${host}:${port}/api/v1`;
 
 // URL телеграмм бота
 export const TGURL = 'https://google.com'
