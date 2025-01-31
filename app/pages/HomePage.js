@@ -6,6 +6,7 @@ import { Duration, DateTime } from 'luxon';
 import { Swipeable } from 'react-native-gesture-handler';
 
 import { URL } from '../config';
+import apiService from '../api';
 
 export const HomeScreen = ({ navigation }) => {
   const USERID = localStorage.getItem('UserId');
@@ -19,17 +20,13 @@ export const HomeScreen = ({ navigation }) => {
   // Функция для получения данных с сервера
   const fetchProducts = async () => {
     const authToken = localStorage.getItem('authToken');
+    if (!authToken) {
+      navigation.navigate("Auth")
+    }
 
     try {
-      const response = await fetch(`${URL}/fridge_products`, {
-        method: 'GET',
-        headers: {
-          Authorization: 'Bearer ' + authToken,
-        },
-      });
-
-      const data = await response.json();
-      console.log(data);
+      const response = await apiService.getFridgeProducts();
+      const data = await response.data;
 
       if (data) {
         setProducts(data.items);
@@ -48,19 +45,9 @@ export const HomeScreen = ({ navigation }) => {
 
   // Удаление элемента из списка
   const handleDelete = async item => {
-    const authToken = localStorage.getItem('authToken');
-
     try {
       // Отправляем запрос на сервер для удаления
-      const response = await fetch(`${URL}/fridge_products/${item.id}`, {
-        method: 'DELETE',
-        headers: {
-          Authorization: 'Bearer ' + authToken,
-        },
-      });
-      if (!response.ok) {
-        Alert.alert('Ошибка', 'Не удалось удалить продукт.');
-      }
+      await apiService.deleteFridgeProduct(item.id)
 
       // Удаляем из локального списка
       setProducts(prevProducts => prevProducts.filter(product => product.id !== item.id));
@@ -72,35 +59,20 @@ export const HomeScreen = ({ navigation }) => {
   };
 
   // Добавление элемента в список покупок
-  // Добавление элемента в список покупок
   const AddShop = async item => {
     try {
-      const response = await fetch(`${URL}/shopping/${USERID}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        // тело POST запроса
-        body: JSON.stringify({
-          name: item.name,
-          fridge_id: item.fridge_id,
-          mass: item.mass + item.unit,
-          product_type: item.product_type, // добавляем тип продукта
-        }),
-        credentials: 'include',
-      });
+      const response = await apiService.createCartProduct({ product_type_id: item.product.product_type_id })
 
-      // Проверка ответа от сервера
-      if (!response.ok) {
+      const data = await response.data
+      console.log(data);
+
+      if (!data) {
         throw new Error('Ошибка при добавлении в корзину');
       }
 
-      const data = await response.json();
-      console.log(data);
     } catch (error) {
       console.error('Ошибка:', error);
     }
-    swipeableRef.current.close();
   };
 
   // Сортировка продуктов

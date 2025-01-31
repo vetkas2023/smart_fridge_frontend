@@ -13,9 +13,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
-// импорт констант из файла с конфигурациями
-import { URL } from '../config';
+import apiService from '../api';
 
 // Экспортируемый экран авторизации
 export const RegScreen = ({ navigation }) => {
@@ -49,22 +47,13 @@ export const RegScreen = ({ navigation }) => {
       setColor('black');
 
       try {
-        const response = await fetch(`${URL}/users/`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          // тело POST запроса
-          body: JSON.stringify({
-            login: login,
-            email: email,
-            password: password,
-          }),
-        });
+        await apiService.createUser({
+          username: login,
+          email: email,
+          password: password,
+        })
 
-        if (response.ok) {
-          navigation.navigate('Auth');
-        }
+        navigation.navigate('Auth');
       } catch (error) {
         console.error('Ошибка при авторизации:', error);
       }

@@ -13,8 +13,7 @@ import {
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
-// импорт констант из файла с конфигурациями
-import { URL } from '../config';
+import apiService from '../api';
 
 // Экспортируемый экран авторизации
 export const AuthScreen = ({ navigation }) => {
@@ -64,68 +63,39 @@ export const AuthScreen = ({ navigation }) => {
     }
   };
 
-  // Авторизация пользователя
   const sendDataToServerAuth = async () => {
     if (email !== '' || password !== '') {
       try {
-        // формирование POST запроса на сервер с постфиксом auth
-        const response = await fetch(`${URL}/auth/login`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'user-agent': navigator.userAgent,
-          },
-          body: JSON.stringify({
-            email: email,
-            password: password,
-          }),
-        });
+        const response = await apiService.login({ email, password }, navigator.userAgent)
 
-        // Проверка кода статуса ответа
-        if (response.ok) {
-          const data = await response.json();
-          console.log(data);
-          const { access_token, refresh_token, access_token_expires_in } = data;
+        const data = await response.data
+        console.log(data);
+        const { access_token, refresh_token, access_token_expires_in } = data;
 
-          if (access_token) {
-            const expiresAt = Date.now() + access_token_expires_in * 1000 * 60;
-            localStorage.setItem('authToken', access_token);
-            localStorage.setItem('expiresAt', expiresAt);
+        if (access_token) {
+          const expiresAt = Date.now() + access_token_expires_in * 1000 * 60;
+          localStorage.setItem('authToken', access_token);
+          localStorage.setItem('expiresAt', expiresAt);
 
-            console.log('Access token сохранён:', access_token);
-            console.log('Refresh token получен и хранится в куках автоматически');
-            console.log('Refresh token:', refresh_token);
+          console.log('Access token сохранён:', access_token);
+          console.log('Refresh token получен и хранится в куках автоматически');
+          console.log('Refresh token:', refresh_token);
 
-            setIsAuthenticated(true);
-            navigation.navigate('Home');
-          }
+          setIsAuthenticated(true);
+          navigation.navigate('Home');
         } else {
-          // Обработка различных кодов ошибок
-          switch (response.status) {
-            case 401:
-              setMessage('Неверный логин или пароль');
-              break;
-            case 500:
-              setMessage('Ошибка сервера, попробуйте позже');
-              break;
-            default:
-              console.log(response.status);
-              setMessage('Произошла неизвестная ошибка, попробуйте позже');
-              break;
-          }
+          setMessage('Поля логина и пароля не могут быть пустыми');
         }
       } catch (error) {
-        console.error('Ошибка при авторизации:', error);
-        setMessage('Не удалось подключиться к серверу. Попробуйте позже. ' + error.message);
+        setMessage(error)
+        console.log(error)
       }
-    } else {
-      setMessage('Поля логина и пароля не могут быть пустыми');
-    }
 
-    // Очистка полей после попытки авторизации
-    setEmail('');
-    setPassword('');
-  };
+      // Очистка полей после попытки авторизации
+      setEmail('');
+      setPassword('');
+    };
+  }
 
   // Интерфейс страницы
   return (
