@@ -11,7 +11,7 @@ export const HomeScreen = ({ navigation }) => {
   const swipeableRef = useRef(null);
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  // По умолчанию сортировка по сроку годности
+
   const [sortType, setSortType] = useState('expiry_date');
   const [openDropdown, setOpenDropdown] = useState(false);
 

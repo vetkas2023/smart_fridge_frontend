@@ -240,4 +240,15 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
   },
+  addButton: {
+    justifyContent: 'center',
+    backgroundColor: 'blue',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    flex: 1,
+  },
+  addButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+  },
 });

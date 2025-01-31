@@ -1,9 +1,3 @@
-// 
-// Компонент блока сканирования QR кода
-// 
-// Вообще не понятная штука, если честно 😅 
-// 
-
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useEffect, useRef } from 'react';
 
@@ -36,9 +30,8 @@ const QRCodeScanner = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify(data),
-          
         });
-        
+
       } catch (error) {
         console.error("Error processing QR code: ", error);
       }
@@ -55,7 +48,7 @@ const QRCodeScanner = () => {
   }, []);
 
   return (
-      <div id={qrcodeRegionId} style={{ width: '100%', height: '90%' }}></div>
+    <div id={qrcodeRegionId} style={{ width: '100%', height: '90%' }}></div>
   );
 };
 
