@@ -69,6 +69,16 @@ const apiService = {
   createUser: (data) => apiClient.post('/api/v1/users/', data),
   getUser: () => apiClient.get('/api/v1/users/me'),
   deleteUser: () => apiClient.delete('/api/v1/users/me'),
+  getUserId: async () => {
+    const userId = localStorage.getItem("userId")
+    if (userId) {
+      return userId
+    }
+    const response = await apiClient.get('/api/v1/users/me');
+    const { id } = await response.data;
+    localStorage.setItem('userId', id)
+    return id
+  },
 
   // Product Types endpoints
   getProductTypes: () => apiClient.get('/api/v1/product_types/'),

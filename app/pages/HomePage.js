@@ -5,11 +5,9 @@ import DropDownPicker from 'react-native-dropdown-picker';
 import { Duration, DateTime } from 'luxon';
 import { Swipeable } from 'react-native-gesture-handler';
 
-import { URL } from '../config';
 import apiService from '../api';
 
 export const HomeScreen = ({ navigation }) => {
-  const USERID = localStorage.getItem('UserId');
   const swipeableRef = useRef(null);
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -19,11 +17,6 @@ export const HomeScreen = ({ navigation }) => {
 
   // Функция для получения данных с сервера
   const fetchProducts = async () => {
-    const authToken = localStorage.getItem('authToken');
-    if (!authToken) {
-      navigation.navigate("Auth")
-    }
-
     try {
       const response = await apiService.getFridgeProducts();
       const data = await response.data;

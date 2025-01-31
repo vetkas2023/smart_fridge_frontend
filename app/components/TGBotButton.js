@@ -7,8 +7,7 @@ import apiService from '../api';
 
 export const TGBotButton = ({ navigation }) => {
   const getURL = async () => {
-    const response = await apiService.getUser()
-    const { id } = response.data
+    const id = await apiService.getUserId()
 
     const url = `https://t.me/${bot_name}/?start=${id}`
     return url

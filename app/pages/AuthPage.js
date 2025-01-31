@@ -42,27 +42,6 @@ export const AuthScreen = ({ navigation }) => {
     }
   }, []);
 
-  // Функция обновления токена (пример)
-  const refreshAuthToken = async () => {
-    try {
-      const response = await fetch(`${URL}/refresh`, {
-        method: 'POST',
-        credentials: 'include', // Передача cookie для refresh
-      });
-      const data = await response.json();
-      const { access, expiresIn } = data;
-
-      if (access) {
-        const expiresAt = Date.now() + expiresIn * 1000;
-        localStorage.setItem('authToken', access);
-        localStorage.setItem('expiresAt', expiresAt);
-        setIsAuthenticated(true);
-      }
-    } catch (error) {
-      console.error('Ошибка обновления токена:', error);
-    }
-  };
-
   const sendDataToServerAuth = async () => {
     if (email !== '' || password !== '') {
       try {
