@@ -1,14 +1,15 @@
 import { Html5QrcodeScanner } from 'html5-qrcode';
 import { useEffect, useRef } from 'react';
+import { View } from 'react-native';
+import apiService from '../api';
+import { useRoute } from '@react-navigation/native';
 
-import { URL } from '../config';
-
-// ID для области сканирования
 const qrcodeRegionId = "html5qr-code-full-region";
 
-// Компонент сканера QR-кодов
-const QRCodeScanner = () => {
-  const scannerRef = useRef(null);
+const QRCodeScanner = ({ navigation }) => {
+  const scannerRef = useRef(null)
+  const route = useRoute()
+  const { fridge } = route.params
 
   useEffect(() => {
     const config = {
@@ -17,38 +18,58 @@ const QRCodeScanner = () => {
       rememberLastUsedCamera: true,
     };
 
-    // Обработчик успешного сканирования
-    const onScanSuccess = async (decodedText, decodedResult) => {
+    const checkAlreadyExists = async (decodedText) => {
+      const productId = parseFloat(decodedText);
       try {
-        // Парсим полученный JSON
-        const data = JSON.parse(decodedText);
+        const responseFr = await apiService.getFridgeProducts({ product_id_eq: productId });
+        const data = responseFr.data;
 
-        // Отправляем данные на сервер
-        const response = await fetch(`${URL}/qr-data`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(data),
-        });
-
-      } catch (error) {
-        console.error("Error processing QR code: ", error);
+        console.log(data)
+        if (data.items && data.items.length > 0) {
+          scannerRef.current.clear().catch(error => {
+            console.error("Failed to clear html5QrcodeScanner. ", error);
+          });
+          navigation.navigate('ProductInfo', { product: data.items[0] }); // Navigate to ProductInfo screen
+        } else {
+          // create it otherwise
+          await apiService.createFridgeProduct({ fridge_id: fridge.id, product_id: productId });
+          alert('Product created successfully!');
+          scannerRef.current.clear().catch(error => {
+            console.error("Failed to clear html5QrcodeScanner. ", error);
+          });
+          navigation.navigate("OneFridge", { fridge })
+        }
+      } catch (e) {
+        alert(`Error checking product: ${e.message}. f_id=${fridge.id}, p_id=${productId}`);
       }
     };
 
+    // Callback for successful scan
+    const onScanSuccess = async (decodedText, decodedResult) => {
+      try {
+        await checkAlreadyExists(decodedText);
+      } catch (e) {
+        alert(`Scan error: ${e.message}`);
+      }
+    };
+
+    // Initialize the scanner
     scannerRef.current = new Html5QrcodeScanner(qrcodeRegionId, config, false);
     scannerRef.current.render(onScanSuccess);
 
+    // Cleanup function
     return () => {
       scannerRef.current.clear().catch(error => {
         console.error("Failed to clear html5QrcodeScanner. ", error);
       });
     };
-  }, []);
+  }, [fridge.id, navigation]);
 
   return (
-    <div id={qrcodeRegionId} style={{ width: '100%', height: '90%' }}></div>
+    <View
+      id={qrcodeRegionId}
+      style={{ width: '100%', height: '90%' }}
+    />
   );
 };
 

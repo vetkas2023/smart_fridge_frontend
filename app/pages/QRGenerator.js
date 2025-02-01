@@ -22,7 +22,7 @@ const formatDate = (date, format = 'DD-MM-YYYY') => {
 
 export const QRCodeGenerator = () => {
   const [productTypes, setProductTypes] = useState([]);
-  const [productType, setProductType] = useState(null);
+  const [productTypeId, setProductTypeId] = useState(null);
   const [manufactureDate, setManufactureDate] = useState('');
   const [amount, setAmount] = useState('');
 
@@ -49,13 +49,18 @@ export const QRCodeGenerator = () => {
     }, []),
   );
 
-  const generateQRCode = () => {
-    const data = {
-      product_type: productType,
-      manufacture_date: manufactureDate,
-      amount: parseFloat(amount),
-    };
-    setQrData(data);
+  const generateQRCode = async () => {
+    try {
+      const response = await apiService.createProduct({
+        product_type_id: productTypeId,
+        manufactured_at: manufactureDate,
+        amount: parseFloat(amount),
+      })
+      const data = await response.data
+      setQrData(data.id)
+    } catch (error) {
+      alert(error)
+    }
   };
 
   const downloadQRCode = async () => {
@@ -116,10 +121,10 @@ export const QRCodeGenerator = () => {
 
       <DropDownPicker
         open={openDropdown}
-        value={productType}
+        value={productTypeId}
         items={productTypes}
         setOpen={setOpenDropdown}
-        setValue={setProductType}
+        setValue={setProductTypeId}
         placeholder="Тип продукта"
         style={styles.dropdown}
         dropDownContainerStyle={styles.dropdownContainer}

@@ -12,8 +12,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-
 import apiService from '../api';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Экспортируемый экран авторизации
 export const AuthScreen = ({ navigation }) => {
@@ -30,16 +30,19 @@ export const AuthScreen = ({ navigation }) => {
 
   // Проверка сохранённой сессии при монтировании
   useEffect(() => {
-    const token = localStorage.getItem('authToken');
-    const expiresAt = localStorage.getItem('expiresAt');
+    const func = async () => {
+      const token = await AsyncStorage.getItem('authToken');
+      const expiresAt = await AsyncStorage.getItem('expiresAt');
 
-    if (token && expiresAt && Date.now() < expiresAt) {
-      setIsAuthenticated(true);
-      navigation.navigate('Home'); // Перенаправляем на главную страницу
-    } else {
-      localStorage.removeItem('authToken');
-      localStorage.removeItem('expiresAt');
+      if (token && expiresAt && Date.now() < expiresAt) {
+        setIsAuthenticated(true);
+        navigation.navigate('Home'); // Перенаправляем на главную страницу
+      } else {
+        await AsyncStorage.removeItem('authToken');
+        await AsyncStorage.removeItem('expiresAt');
+      }
     }
+    func()
   }, []);
 
   const sendDataToServerAuth = async () => {
@@ -53,8 +56,8 @@ export const AuthScreen = ({ navigation }) => {
 
         if (access_token) {
           const expiresAt = Date.now() + access_token_expires_in * 1000 * 60;
-          localStorage.setItem('authToken', access_token);
-          localStorage.setItem('expiresAt', expiresAt);
+          await AsyncStorage.setItem('authToken', access_token);
+          await AsyncStorage.setItem('expiresAt', expiresAt.toString());
 
           console.log('Access token сохранён:', access_token);
           console.log('Refresh token получен и хранится в куках автоматически');
@@ -66,7 +69,7 @@ export const AuthScreen = ({ navigation }) => {
           setMessage('Поля логина и пароля не могут быть пустыми');
         }
       } catch (error) {
-        setMessage(error)
+        setMessage(error.message)
         console.log(error)
       }
 
@@ -190,14 +193,14 @@ const styles = StyleSheet.create({
     margin: 'auto',
 
     color: '#e2e8e9',
-    fontSize: '1.25rem',
+    fontSize: 20,
   },
 
   topText: {
     textAlign: 'center',
     justifyContent: 'center',
 
-    fontSize: '1.05rem',
+    fontSize: 17,
     color: '#e2e8e9',
     margin: '5%',
     padding: 'auto',

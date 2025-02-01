@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { URL } from './config.js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // Create an Axios instance with a base URL
 const apiClient = axios.create({
@@ -12,8 +13,8 @@ const apiClient = axios.create({
 
 // Add request interceptor (e.g., for adding auth tokens)
 apiClient.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('authToken'); // Or use AsyncStorage in React Native
+  async (config) => {
+    const token = await AsyncStorage.getItem('authToken'); // Or use AsyncStorage in React Native
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
@@ -70,13 +71,13 @@ const apiService = {
   getUser: () => apiClient.get('/api/v1/users/me'),
   deleteUser: () => apiClient.delete('/api/v1/users/me'),
   getUserId: async () => {
-    const userId = localStorage.getItem("userId")
+    const userId = await AsyncStorage.getItem("userId")
     if (userId) {
       return userId
     }
     const response = await apiClient.get('/api/v1/users/me');
     const { id } = await response.data;
-    localStorage.setItem('userId', id)
+    await AsyncStorage.setItem('userId', id)
     return id
   },
 

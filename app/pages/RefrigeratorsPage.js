@@ -29,7 +29,7 @@ export const RefrigeratorsScreen = ({ navigation }) => {
   );
 
   const handlePress = ({ fridge }) => {
-    navigation.navigate("OneFridge", { fridgeName: fridge.name, fridgeId: fridge.id });
+    navigation.navigate("OneFridge", { fridge });
   }
 
   const renderFridgeItem = ({ item }) => (

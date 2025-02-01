@@ -11,7 +11,7 @@ import apiService from '../api';
 export const OneFridgeScreen = ({ navigation }) => {
   // получение пути id
   const route = useRoute();
-  const { fridgeName, fridgeId } = route.params;
+  const { fridge } = route.params;
 
   const [products, setProducts] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -21,7 +21,7 @@ export const OneFridgeScreen = ({ navigation }) => {
   // Функция для получения данных с сервера
   const fetchProducts = async () => {
     try {
-      const response = await apiService.getFridgeProducts({ fridge_id_eq: fridgeId })
+      const response = await apiService.getFridgeProducts({ fridge_id_eq: fridge.id })
       const data = await response.data;
 
       setProducts(data.items)
@@ -136,7 +136,7 @@ export const OneFridgeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>{fridgeName}</Text>
+      <Text style={styles.title}>{fridge.name}</Text>
 
       <TextInput
         style={styles.searchInput}
@@ -176,7 +176,7 @@ export const OneFridgeScreen = ({ navigation }) => {
         />
       </View>
 
-      <CircleButton navigation={navigation} />
+      <CircleButton navigation={navigation} fridge={fridge} />
     </View>
   );
 };
