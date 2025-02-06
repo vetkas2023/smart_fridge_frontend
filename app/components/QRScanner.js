@@ -18,25 +18,20 @@ const QRCodeScanner = ({ navigation }) => {
       rememberLastUsedCamera: true,
     };
 
+
     const checkAlreadyExists = async (decodedText) => {
       const productId = parseFloat(decodedText);
       try {
         const responseFr = await apiService.getFridgeProducts({ product_id_eq: productId });
         const data = responseFr.data;
 
-        console.log(data)
         if (data.items && data.items.length > 0) {
-          scannerRef.current.clear().catch(error => {
-            console.error("Failed to clear html5QrcodeScanner. ", error);
-          });
+          cleanup()
           navigation.navigate('ProductInfo', { product: data.items[0] }); // Navigate to ProductInfo screen
         } else {
           // create it otherwise
           await apiService.createFridgeProduct({ fridge_id: fridge.id, product_id: productId });
-          alert('Product created successfully!');
-          scannerRef.current.clear().catch(error => {
-            console.error("Failed to clear html5QrcodeScanner. ", error);
-          });
+          cleanup()
           navigation.navigate("OneFridge", { fridge })
         }
       } catch (e) {
@@ -58,12 +53,14 @@ const QRCodeScanner = ({ navigation }) => {
     scannerRef.current.render(onScanSuccess);
 
     // Cleanup function
-    return () => {
+    const cleanup = () => {
       scannerRef.current.clear().catch(error => {
         console.error("Failed to clear html5QrcodeScanner. ", error);
       });
-    };
-  }, [fridge.id, navigation]);
+    }
+
+    return cleanup
+  }, [fridge, navigation]);
 
   return (
     <View

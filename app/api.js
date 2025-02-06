@@ -132,6 +132,9 @@ const apiService = {
     apiClient.put(`/api/v1/cart_products/${cartProductId}`, data),
   deleteCartProduct: (cartProductId) =>
     apiClient.delete(`/api/v1/cart_products/${cartProductId}`),
+
+  // Statistics endpoints
+  getStatistics: (params) => apiClient.get('/api/v1/statistics/', { params }),
 };
 
 export default apiService;
