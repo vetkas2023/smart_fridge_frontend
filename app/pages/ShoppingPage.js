@@ -13,7 +13,20 @@ export const ShoppingScreen = () => {
       const response = await apiService.getCartProducts()
       const data = response.data;
 
-      setProducts(data);
+      // Group products by product_type.id
+      const groupedProducts = data.reduce((acc, product) => {
+        const key = product.product_type.id;
+        if (!acc[key]) {
+          acc[key] = { ...product, quantity: 1 }; // Initialize if not exists
+        } else {
+          acc[key].quantity += 1; // Increment quantity for duplicates
+        }
+        return acc;
+      }, {});
+
+      // Convert the grouped object back to an array
+      const groupedArray = Object.values(groupedProducts);
+      setProducts(groupedArray);
     } catch (error) {
       console.error('Error fetching products:', error);
     }
@@ -28,11 +41,28 @@ export const ShoppingScreen = () => {
   const handleDelete = async item => {
     try {
       // Отправляем запрос на сервер для удаления
-      await apiService.deleteCartProduct(item.id)
+      await apiService.deleteCartProduct(item.id);
 
-      // Удаляем из локального списка
-      setProducts(prevProducts => prevProducts.filter(product => product.id !== item.id));
-    } catch (error) { }
+      // Обновляем локальный список
+      setProducts(prevProducts => {
+        const updatedProducts = prevProducts.map(product => {
+          if (product.id === item.id) {
+            // Если количество больше 1, уменьшаем его на 1
+            if (product.quantity > 1) {
+              return { ...product, quantity: product.quantity - 1 };
+            }
+            // Если количество 1, возвращаем null для удаления
+            return null;
+          }
+          return product;
+        });
+
+        // Фильтруем null значения (удаленные продукты)
+        return updatedProducts.filter(product => product !== null);
+      });
+    } catch (error) {
+      console.error("Error deleting product:", error);
+    }
   };
 
   // Отображение кнопки удаления
@@ -50,6 +80,9 @@ export const ShoppingScreen = () => {
         <Text style={styles.productName}>{item.product_type.name}</Text>
         <Text style={styles.productDetail}>Классификация: {item.product_type.slug}</Text>
         <Text style={styles.productDetail}>Калории: {item.product_type.calories}</Text>
+        <Text style={styles.productName}>
+          {item.quantity > 1 ? `${item.quantity}x` : ''}
+        </Text>
       </View>
     </Swipeable>
   );
