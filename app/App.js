@@ -28,7 +28,7 @@ const Drawer = createDrawerNavigator();
 const Stack = createStackNavigator();
 
 // Обертка для Stack внутри Drawer для страницы Холодильников
-function FidgeStack() {
+function FridgeStack() {
   return (
     <Stack.Navigator
       initialRouteName="Refrigerators"
@@ -139,7 +139,7 @@ export default function App() {
         <Drawer.Screen
           name="Refrigerators"
           options={{ title: 'Холодильники', headerTitleAlign: 'center' }}
-          component={FidgeStack}
+          component={FridgeStack}
         />
         <Drawer.Screen
           name="Generator"

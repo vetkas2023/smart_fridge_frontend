@@ -14,10 +14,15 @@ const apiClient = axios.create({
 // Add request interceptor (e.g., for adding auth tokens)
 apiClient.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('authToken'); // Or use AsyncStorage in React Native
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const expiresAt = await AsyncStorage.getItem('expiresAt');
+
+    // Check if the token is expired
+    if (expiresAt && Date.now() > new Date(expiresAt).getTime()) {
+      // Token is expired, refresh it
+      await refreshTokens();
     }
+    const token = await AsyncStorage.getItem("authToken")
+    config.headers.Authorization = `Bearer ${token}`;
     return config;
   },
   (error) => {
@@ -48,6 +53,21 @@ apiClient.interceptors.response.use(
   }
 );
 
+const refreshTokens = async (userAgent) => {
+  const response = apiClient.post(
+    '/api/v1/auth/refresh_tokens',
+    {},
+    {
+      headers: { 'User-Agent': userAgent },
+      withCredentials: true,
+    }
+  )
+  const { access_token, refresh_token, access_token_expires_in } = response.data;
+  const expiresAt = Date.now() + access_token_expires_in * 1000 * 60;
+  await AsyncStorage.setItem('authToken', access_token);
+  await AsyncStorage.setItem('expiresAt', expiresAt.toString());
+}
+
 // API methods based on openapi.json
 const apiService = {
   // Auth endpoints
@@ -55,15 +75,20 @@ const apiService = {
     apiClient.post('/api/v1/auth/login', data, {
       headers: { 'User-Agent': userAgent },
     }),
-  refreshTokens: (refreshToken, userAgent) =>
-    apiClient.post(
+  refreshTokens: async (userAgent) => {
+    const response = apiClient.post(
       '/api/v1/auth/refresh_tokens',
       {},
       {
         headers: { 'User-Agent': userAgent },
         withCredentials: true,
       }
-    ),
+    )
+    const { access_token, refresh_token, access_token_expires_in } = response.data;
+    const expiresAt = Date.now() + access_token_expires_in * 1000 * 60;
+    await AsyncStorage.setItem('authToken', access_token);
+    await AsyncStorage.setItem('expiresAt', expiresAt.toString());
+  },
   logout: () => apiClient.delete('/api/v1/auth/logout'),
 
   // User endpoints

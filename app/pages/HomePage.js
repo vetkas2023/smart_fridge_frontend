@@ -68,22 +68,6 @@ export const HomeScreen = ({ navigation }) => {
     }
   };
 
-  // Сортировка продуктов
-  const sortedProducts = [...products].sort((a, b) => {
-    if (sortType === 'manufacture_date') {
-      return new Date(a.product.manufactured_at) - new Date(b.product.manufactured_at);
-    } else if (sortType === 'mass') {
-      return parseFloat(a.product.amount) - parseFloat(b.product.amount);
-    } else {
-      return 0;
-    }
-  });
-
-  // Фильтрация продуктов по поисковому запросу
-  const filteredProducts = sortedProducts.filter(item =>
-    item.product.product_type.name.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   const getExpirationDays = item => {
     const expiresDuration = Duration.fromISO(item.product.product_type.exp_period_before_opening);
 
@@ -92,7 +76,7 @@ export const HomeScreen = ({ navigation }) => {
     const expiryDateTime = manufacturedDateTime.plus(expiresDuration);
 
     const daysLeft = expiryDateTime.diff(DateTime.now(), 'days').days;
-    return Math.ceil(daysLeft);
+    return Math.floor(daysLeft);
   };
 
   const getBorderColor = item => {
@@ -101,6 +85,23 @@ export const HomeScreen = ({ navigation }) => {
     if (daysLeft <= 5) return 'yellow';
     return 'green';
   };
+
+  // Сортировка продуктов
+  const sortedProducts = [...products].sort((a, b) => {
+    switch (sortType) {
+      case 'manufacture_date':
+        return new Date(a.product.manufactured_at) - new Date(b.product.manufactured_at);
+      case 'mass':
+        return parseFloat(a.product.amount) - parseFloat(b.product.amount);
+      case 'expiry_date':
+        return getExpirationDays(a) - getExpirationDays(b);
+    };
+  });
+
+  // Фильтрация продуктов по поисковому запросу
+  const filteredProducts = sortedProducts.filter(item =>
+    item.product.product_type.name.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
 
   // Отображение кнопки удаления
   const renderRightActions = item => (
@@ -154,7 +155,7 @@ export const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container} showsVerticalScrollIndicator={false}>
-      <Text style={styles.title}>Продукты в холодильнике</Text>
+      <Text style={styles.title}>Продукты в холодильниках</Text>
 
       <TextInput
         style={styles.searchInput}
