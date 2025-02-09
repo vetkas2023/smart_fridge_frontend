@@ -1,4 +1,5 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import {
   View,
   Text,
@@ -10,40 +11,56 @@ import {
 } from 'react-native';
 import QRCode from 'react-native-qrcode-svg';
 import { Calendar } from 'react-native-calendars';
-import { Picker } from '@react-native-picker/picker';
+import DropDownPicker from 'react-native-dropdown-picker';
+import apiService from '../api';
 
-// Функция для форматирования даты
 const formatDate = (date, format = 'DD-MM-YYYY') => {
-    const [year, month, day] = date.split('-');
-    if (format === 'DD-MM-YYYY') return `${day}.${month}.${year}`;
-    return date; // По умолчанию возвращаем дату без изменений
-  };
+  const [year, month, day] = date.split('-');
+  if (format === 'DD-MM-YYYY') return `${day}.${month}.${year}`;
+  return date; // По умолчанию возвращаем дату без изменений
+};
 
 export const QRCodeGenerator = () => {
-  const [productName, setProductName] = useState('');
-  const [productType, setProductType] = useState('');
+  const [productTypes, setProductTypes] = useState([]);
+  const [productTypeId, setProductTypeId] = useState(null);
   const [manufactureDate, setManufactureDate] = useState('');
-  const [expiryDate, setExpiryDate] = useState('');
-  const [mass, setMass] = useState('');
-  const [unit, setUnit] = useState('кг');
-  const [nutritionalValue, setNutritionalValue] = useState('');
+  const [amount, setAmount] = useState('');
+
+  const [openDropdown, setOpenDropdown] = useState(false);
   const [qrData, setQrData] = useState(null);
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [selectedDateType, setSelectedDateType] = useState(null);
 
   const qrCodeRef = useRef();
 
-  const generateQRCode = () => {
-    const data = {
-      name: productName,
-      product_type: productType,
-      manufacture_date: manufactureDate,
-      expiry_date: expiryDate,
-      mass: parseFloat(mass),
-      unit,
-      nutritional_value: nutritionalValue,
-    };
-    setQrData(data);
+  const fetchProductTypes = async () => {
+    const response = await apiService.getProductTypes();
+    const types = await response.data.map(type => ({
+      label: type.name,
+      value: type.id,
+    }));
+
+    setProductTypes(types)
+  }
+
+  useFocusEffect(
+    useCallback(() => {
+      fetchProductTypes(); // Загружаем продукты
+    }, []),
+  );
+
+  const generateQRCode = async () => {
+    try {
+      const response = await apiService.createProduct({
+        product_type_id: productTypeId,
+        manufactured_at: manufactureDate,
+        amount: parseFloat(amount),
+      })
+      const data = await response.data
+      setQrData(data)
+    } catch (error) {
+      alert(error)
+    }
   };
 
   const downloadQRCode = async () => {
@@ -85,8 +102,6 @@ export const QRCodeGenerator = () => {
   const onDateSelect = (date) => {
     if (selectedDateType === 'manufacture') {
       setManufactureDate(date.dateString);
-    } else if (selectedDateType === 'expiry') {
-      setExpiryDate(date.dateString);
     }
     setIsDatePickerVisible(false);
   };
@@ -104,25 +119,16 @@ export const QRCodeGenerator = () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.title}>Генерация QR-кода для продукта</Text>
 
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Название продукта</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Введите название"
-          value={productName}
-          onChangeText={setProductName}
-        />
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Тип продукта</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Введите тип продукта"
-          value={productType}
-          onChangeText={setProductType}
-        />
-      </View>
+      <DropDownPicker
+        open={openDropdown}
+        value={productTypeId}
+        items={productTypes}
+        setOpen={setOpenDropdown}
+        setValue={setProductTypeId}
+        placeholder="Тип продукта"
+        style={styles.dropdown}
+        dropDownContainerStyle={styles.dropdownContainer}
+      />
 
       <View style={styles.formGroup}>
         <Text style={styles.label}>Дата изготовления</Text>
@@ -139,45 +145,13 @@ export const QRCodeGenerator = () => {
       </View>
 
       <View style={styles.formGroup}>
-        <Text style={styles.label}>Дата истечения срока годности</Text>
-        <TouchableOpacity
-          style={styles.dateInput}
-          onPress={() => openDatePicker('expiry')}
-        >
-          <Text style={styles.dateText}>
-            {expiryDate ? formatDate(expiryDate, 'DD-MM-YYYY') : 'Выберите дату'}
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Масса</Text>
+        <Text style={styles.label}>Количество</Text>
         <TextInput
           style={styles.input}
-          placeholder="Введите массу"
+          placeholder="Введите кол-во товара"
           keyboardType="numeric"
-          value={mass}
-          onChangeText={setMass}
-        />
-      </View>
-
-      <Picker
-        selectedValue={unit}
-        onValueChange={(itemValue) => setUnit(itemValue)}
-        style={styles.picker}>
-        <Picker.Item label="Килограммы (кг)" value="кг" />
-        <Picker.Item label="Граммы (г)" value="г" />
-        <Picker.Item label="Литры (л)" value="л" />
-        <Picker.Item label="Миллилитры (мл)" value="мл" />
-      </Picker>
-
-      <View style={styles.formGroup}>
-        <Text style={styles.label}>Пищевая ценность</Text>
-        <TextInput
-          style={styles.input}
-          placeholder="Введите пищевую ценность"
-          value={nutritionalValue}
-          onChangeText={setNutritionalValue}
+          value={amount}
+          onChangeText={setAmount}
         />
       </View>
 
@@ -209,7 +183,6 @@ export const QRCodeGenerator = () => {
               onDayPress={onDateSelect}
               markedDates={{
                 [manufactureDate]: { selected: true, selectedColor: 'blue' },
-                [expiryDate]: { selected: true, selectedColor: 'blue' },
               }}
             />
             <TouchableOpacity style={styles.closeButton} onPress={closeDatePicker}>
@@ -242,6 +215,15 @@ const styles = {
     fontSize: 16,
     marginBottom: 8,
     color: '#555',
+  },
+  dropdown: {
+    marginBottom: 16,
+    borderColor: '#ccc',
+    zIndex: -1,
+  },
+  dropdownContainer: {
+    borderColor: '#ccc',
+    zIndex: -1,
   },
   input: {
     backgroundColor: '#fff',

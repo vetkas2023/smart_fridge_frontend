@@ -4,17 +4,16 @@ import { View, Text, FlatList, StyleSheet, TouchableOpacity, Alert } from 'react
 
 import { SquareButton } from "../components/SquareButton";
 
-import { URL } from '../config';
+import apiService from '../api';
 
 export const RefrigeratorsScreen = ({ navigation }) => {
-  const USERID = localStorage.getItem("UserId");
   const [fridges, setFridges] = useState([]);
 
   // Получение списка холодильников с сервера
   const fetchFridges = async () => {
     try {
-      const response = await fetch(`${URL}/fridges/${USERID}`);
-      const data = await response.json();
+      const response = await apiService.getFridges();
+      const data = response.data;
       setFridges(data);
     } catch (error) {
       console.error('Ошибка при загрузке холодильников:', error);
@@ -29,16 +28,16 @@ export const RefrigeratorsScreen = ({ navigation }) => {
     }, [])
   );
 
-  const handlePress = ({fridge}) => {
-    navigation.navigate("OneFridge", {fridgeName: fridge.title, fridgeId: fridge.id});
+  const handlePress = ({ fridge }) => {
+    navigation.navigate("OneFridge", { fridge });
   }
 
   const renderFridgeItem = ({ item }) => (
     <TouchableOpacity
       style={styles.fridgeItem}
-      onPress={() => handlePress({fridge: item})}
+      onPress={() => handlePress({ fridge: item })}
     >
-      <Text style={styles.fridgeTitle}>{item.title}</Text>
+      <Text style={styles.fridgeTitle}>{item.name}</Text>
     </TouchableOpacity>
   );
 
