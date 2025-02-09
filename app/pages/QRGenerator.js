@@ -57,7 +57,7 @@ export const QRCodeGenerator = () => {
         amount: parseFloat(amount),
       })
       const data = await response.data
-      setQrData(data.id)
+      setQrData(data)
     } catch (error) {
       alert(error)
     }

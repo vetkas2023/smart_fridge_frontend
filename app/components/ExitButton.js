@@ -9,10 +9,10 @@ export const ExitButton = ({ navigation }) => {
       await AsyncStorage.removeItem('authToken');
       await AsyncStorage.removeItem('expiresAt');
       await AsyncStorage.removeItem('UserId');
-
-      exit();
-      navigation.navigate('AuthStack');
     }
+
+    exit();
+    navigation.navigate('AuthStack');
   }, []
   );
 

@@ -15,7 +15,7 @@ const QRCodeScanner = ({ navigation }) => {
   const [isScanning, setIsScanning] = useState(true); // Flag to control scanning
 
   const checkAlreadyExists = async (decodedText) => {
-    const productId = parseFloat(decodedText);
+    const productId = JSON.parse(decodedText).id;
     try {
       const responseFr = await apiService.getFridgeProducts({ product_id_eq: productId });
       const data = responseFr.data;

@@ -51,6 +51,22 @@ export const OneFridgeScreen = ({ navigation }) => {
     }
   };
 
+  const AddShop = async item => {
+    try {
+      const response = await apiService.createCartProduct({ product_type_id: item.product.product_type_id })
+
+      const data = await response.data
+      console.log(data);
+
+      if (!data) {
+        throw new Error('Ошибка при добавлении в корзину');
+      }
+
+    } catch (error) {
+      console.error('Ошибка:', error);
+    }
+  };
+
   const getExpirationDays = item => {
     const expiresDuration = Duration.fromISO(item.product.product_type.exp_period_before_opening);
 

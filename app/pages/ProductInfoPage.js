@@ -13,7 +13,7 @@ export const ProductInfo = ({ navigation }) => {
     const expiryDateTime = manufacturedDateTime.plus(expiresDuration);
 
     const daysLeft = expiryDateTime.diff(DateTime.now(), 'days').days;
-    return Math.ceil(daysLeft);
+    return Math.floor(daysLeft);
   };
 
   const getBorderColor = item => {
